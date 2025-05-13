@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Expense Tracker</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0; padding: 1rem;
+    background: #f4f6f8;
+    color: #333;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  h1 {
+    text-align: center;
+    color: #2a9d8f;
+    display: inline-block;
+  }
+  #user-info {
+    text-align: right;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+  }
+  #logout-btn {
+    background: #e76f51;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    margin-left: 10px;
+  }
+  #main-nav {
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    align-items: center;
+  }
+  #main-nav a {
+    color: #2a9d8f;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  #main-nav a:hover {
+    text-decoration: underline;
+  }
+  form {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  label {
+    display: block;
+    margin-bottom: .25rem;
+    font-weight: 600;
+  }
+  input[type="text"], input[type="number"], input[type="date"], select {
+    width: 100%;
+    padding: .5rem;
+    margin-bottom: 1rem;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    font-size: 1rem;
+  }
+  button {
+    background: #2a9d8f;
+    color: white;
+    border: none;
+    padding: 0.6rem 1.25rem;
+    font-size: 1.1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+  button:hover {
+    background: #21867a;
+  }
+  .expenses {
+    margin-top: 1rem;
+  }
+  .expense {
+    background: white;
+    padding: .75rem 1rem;
+    border-radius: 6px;
+    margin-bottom: 0.75rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .expense > div {
+    flex-grow: 1;
+  }
+  .expense-date {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 0.2rem;
+  }
+  .expense-desc {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #264653;
+  }
+  .expense-amount {
+    font-weight: 700;
+    font-size: 1.15rem;
+    color: #e76f51;
+    min-width: 80px;
+    text-align: right;
+  }
+  .expense-category {
+    font-size: 0.85rem;
+    font-style: italic;
+    color: #666;
+  }
+  .expense-buttons button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #2a9d8f;
+    font-size: 1rem;
+    margin-left: 0.5rem;
+    padding: 0;
+  }
+  .expense-buttons button:hover {
+    color: #e76f51;
+  }
+  .filter-section {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  .filter-section label, .filter-section select, .filter-section input {
+    margin-right: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  #chart-container {
+    background: white;
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin-bottom: 1rem;
+    height: 280px;
+  }
+  #view-buttons {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  @media (max-width: 400px) {
+    .expense {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .expense-amount {
+      text-align: left;
+      margin-top: 0.5rem;
+    }
+    .expense-buttons {
+      margin-top: 0.5rem;
+    }
+    #user-info {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+  }
+</style>
+</head>
+<body>
+<div id="user-info"></div>
+<nav id="main-nav">
+  <a href="profile.html">Profile</a>
+</nav>
+
+<h1>Expense Tracker</h1>
+
+<form id="expense-form">
+  <input type="hidden" id="expense-id" value="" />
+  <label for="amount">Amount (USD):</label>
+  <input type="number" step="0.01" id="amount" required placeholder="e.g. 12.50" />
+  
+  <label for="category">Category:</label>
+  <select id="category">
+    <option value="">Select category</option>
+    <option value="Food">Food</option>
+    <option value="Transport">Transport</option>
+    <option value="Shopping">Shopping</option>
+    <option value="Bills">Bills</option>
+    <option value="Entertainment">Entertainment</option>
+    <option value="Other">Other</option>
+  </select>
+
+  <label for="date">Date:</label>
+  <input type="date" id="date" required />
+
+  <label for="description">Description:</label>
+  <input type="text" id="description" required placeholder="e.g. Lunch at cafe" />
+
+  <button type="submit" id="submit-btn">Add Expense</button>
+  <button type="button" id="reset-btn" style="background:#888;margin-left:10px;">Reset</button>
+</form>
+
+<div class="filter-section">
+  <label for="filter-category">Filter by Category:</label>
+  <select id="filter-category">
+    <option value="">All</option>
+    <option value="Food">Food</option>
+    <option value="Transport">Transport</option>
+    <option value="Shopping">Shopping</option>
+    <option value="Bills">Bills</option>
+    <option value="Entertainment">Entertainment</option>
+    <option value="Other">Other</option>
+  </select>
+
+  <label for="filter-from-date">From:</label>
+  <input type="date" id="filter-from-date" />
+
+  <label for="filter-to-date">To:</label>
+  <input type="date" id="filter-to-date" />
+
+  <button id="filter-btn">Apply Filters</button>
+  <button id="clear-filter-btn" style="background:#888; margin-left: 8px;">Clear Filters</button>
+</div>
+
+<div id="view-buttons">
+  <button id="view-details-btn" disabled>Expense Details</button>
+  <button id="view-monthly-btn">Monthly Summary</button>
+  <button id="view-weekly-btn">Weekly Summary</button>
+</div>
+
+<div id="chart-container" style="display:none;">
+  <canvas id="summary-chart" style="width:100%; height:250px;"></canvas>
+</div>
+
+<div id="expenses-section">
+  <div id="total-expenses-chart" style="height: 280px;">
+    <canvas id="expenses-chart" style="width:100%; height:250px;"></canvas>
+  </div>
+  <div class="expenses" id="expenses-list">
+    <!-- Expenses will be displayed here -->
+  </div>
+</div>
+
+<button id="backup-btn" style="background:#264653; color:white; margin-top: 15px; width: 100%;">Backup Database</button>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const API_BASE = '/api/expenses';
+
+const userInfoDiv = document.getElementById('user-info');
+const expenseForm = document.getElementById('expense-form');
+const expensesList = document.getElementById('expenses-list');
+const filterCategory = document.getElementById('filter-category');
+const filterFromDate = document.getElementById('filter-from-date');
+const filterToDate = document.getElementById('filter-to-date');
+
+const submitBtn = document.getElementById('submit-btn');
+const resetBtn = document.getElementById('reset-btn');
+const filterBtn = document.getElementById('filter-btn');
+const clearFilterBtn = document.getElementById('clear-filter-btn');
+const backupBtn = document.getElementById('backup-btn');
+
+const viewDetailsBtn = document.getElementById('view-details-btn');
+const viewMonthlyBtn = document.getElementById('view-monthly-btn');
+const viewWeeklyBtn = document.getElementById('view-weekly-btn');
+
+const chartContainer = document.getElementById('chart-container');
+const summaryChartCanvas = document.getElementById('summary-chart');
+const expensesSection = document.getElementById('expenses-section');
+
+const expenseIdInput = document.getElementById('expense-id');
+
+let expensesChart = null;
+let summaryChart = null;
+
+function formatDate(d) {
+  const dt = new Date(d);
+  return dt.toISOString().split('T')[0];
+}
+
+async function checkLogin() {
+  try {
+    const res = await fetch('/api/current_user', {credentials: 'include'});
+    if (!res.ok) {
+      window.location.href = 'login.html';
+      return null;
+    }
+    const user = await res.json();
+    return user;
+  } catch {
+    window.location.href = 'login.html';
+  }
+}
+
+async function logout() {
+  try {
+    const res = await fetch('/api/logout', { method: 'POST', credentials: 'include' });
+    if (res.ok) {
+      window.location.href = 'login.html';
+    } else {
+      alert('Logout failed');
+    }
+  } catch {
+    alert('Logout failed');
+  }
+}
+
+function renderUserInfo(username) {
+  userInfoDiv.innerHTML = `Logged in as <strong>${username}</strong> <button id="logout-btn">Logout</button>`;
+  document.getElementById('logout-btn').addEventListener('click', logout);
+}
+
+async function fetchExpenses(filters = {}) {
+  let url = API_BASE;
+  const params = [];
+  if (filters.category) params.push('category=' + encodeURIComponent(filters.category));
+  if (filters.fromDate) params.push('fromDate=' + encodeURIComponent(filters.fromDate));
+  if (filters.toDate) params.push('toDate=' + encodeURIComponent(filters.toDate));
+  if (params.length) url += '?' + params.join('&');
+
+  const res = await fetch(url, {credentials: 'include'});
+  if (!res.ok) {
+    let errorMessage = 'Failed to fetch expenses';
+    try {
+      const errData = await res.json();
+      errorMessage = errData.error || errorMessage;
+    } catch {}
+    alert(errorMessage);
+    return [];
+  }
+  return await res.json();
+}
+
+async function fetchMonthlySummary(filters = {}) {
+  let url = '/api/expenses/summary/monthly';
+  const params = [];
+  if (filters.category) params.push('category=' + encodeURIComponent(filters.category));
+  if (filters.fromDate) params.push('fromDate=' + encodeURIComponent(filters.fromDate));
+  if (filters.toDate) params.push('toDate=' + encodeURIComponent(filters.toDate));
+  if (params.length) url += '?' + params.join('&');
+
+  const res = await fetch(url, {credentials: 'include'});
+  if (!res.ok) {
+    let errorMessage = 'Failed to fetch monthly summary';
+    try {
+      const errData = await res.json();
+      errorMessage = errData.error || errorMessage;
+    } catch {}
+    alert(errorMessage);
+    return [];
+  }
+  return await res.json();
+}
+
+async function fetchWeeklySummary(filters = {}) {
+  let url = '/api/expenses/summary/weekly';
+  const params = [];
+  if (filters.category) params.push('category=' + encodeURIComponent(filters.category));
+  if (filters.fromDate) params.push('fromDate=' + encodeURIComponent(filters.fromDate));
+  if (filters.toDate) params.push('toDate=' + encodeURIComponent(filters.toDate));
+  if (params.length) url += '?' + params.join('&');
+
+  const res = await fetch(url, {credentials: 'include'});
+  if (!res.ok) {
+    let errorMessage = 'Failed to fetch weekly summary';
+    try {
+      const errData = await res.json();
+      errorMessage = errData.error || errorMessage;
+    } catch {}
+    alert(errorMessage);
+    return [];
+  }
+  return await res.json();
+}
+
+function renderExpenses(expenses) {
+  expensesList.innerHTML = '';
+  if (expenses.length === 0) {
+    expensesList.innerHTML = '<p>No expenses to display.</p>';
+    return;
+  }
+  expenses.forEach(expense => {
+    const div = document.createElement('div');
+    div.className = 'expense';
+
+    div.innerHTML = `
+      <div>
+        <div class="expense-date">${expense.date}</div>
+        <div class="expense-desc">${expense.description}</div>
+        <div class="expense-category">${expense.category || '<em>Uncategorized</em>'}</div>
+      </div>
+      <div class="expense-amount">$${expense.amount.toFixed(2)}</div>
+      <div class="expense-buttons">
+        <button title="Edit" onclick="editExpense(${expense.id})">&#9998;</button>
+        <button title="Delete" onclick="deleteExpense(${expense.id})">&#10060;</button>
+      </div>
+    `;
+
+    expensesList.appendChild(div);
+  });
+}
+
+function updateExpensesChart(expenses) {
+  // Aggregate total per date
+  const totalsByDate = {};
+  expenses.forEach(e => {
+    totalsByDate[e.date] = (totalsByDate[e.date] || 0) + e.amount;
+  });
+  // Sort dates
+  const labels = Object.keys(totalsByDate).sort();
+  const data = labels.map(date => totalsByDate[date]);
+
+  if (expensesChart) {
+    expensesChart.data.labels = labels;
+    expensesChart.data.datasets[0].data = data;
+    expensesChart.update();
+  } else {
+    const ctx = document.getElementById('expenses-chart').getContext('2d');
+    expensesChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Total Expenses (USD)',
+          data,
+          fill: true,
+          borderColor: '#e76f51',
+          backgroundColor: 'rgba(231, 111, 81, 0.2)',
+          tension: 0.3,
+          pointRadius: 4,
+          pointHoverRadius: 6,
+          borderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Date',
+              font: {weight: 'bold'}
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Amount (USD)',
+              font: {weight: 'bold'}
+            },
+            suggestedMin: 0,
+          }
+        },
+        plugins: {
+          legend: {
+            labels: {
+              font: {size: 14}
+            }
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false
+          }
+        },
+        interaction: {
+          mode: 'nearest',
+          intersect: false
+        }
+      }
+    });
+  }
+}
+
+function updateSummaryChart(labels, data, labelText) {
+  if (summaryChart) {
+    summaryChart.data.labels = labels;
+    summaryChart.data.datasets[0].data = data;
+    summaryChart.data.datasets[0].label = labelText;
+    summaryChart.update();
+  } else {
+    const ctx = summaryChartCanvas.getContext('2d');
+    summaryChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: labelText,
+          data,
+          backgroundColor: '#2a9d8f',
+          borderColor: '#264653',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'Period',
+              font: {weight: 'bold'}
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Total Amount (USD)',
+              font: {weight: 'bold'}
+            },
+            beginAtZero: true
+          }
+        },
+        plugins: {
+          legend: {
+            labels: {
+              font: {size: 14}
+            }
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false
+          }
+        }
+      }
+    });
+  }
+}
+
+async function loadExpenses(filters = {}) {
+  const expenses = await fetchExpenses(filters);
+  showDetailsView();
+  renderExpenses(expenses);
+  updateExpensesChart(expenses);
+}
+
+async function loadMonthlySummary(filters = {}) {
+  const summary = await fetchMonthlySummary(filters);
+  if (!summary.length) {
+    showSummaryView();
+    summaryChartCanvas.style.display = 'none';
+    expensesList.innerHTML = '<p>No data for monthly summary.</p>';
+    return;
+  }
+  const labels = summary.map(s => s.month);
+  const data = summary.map(s => s.total);
+  showSummaryView();
+  expensesList.innerHTML = '';
+  summaryChartCanvas.style.display = 'block';
+  updateSummaryChart(labels, data, 'Monthly Expenses');
+}
+
+async function loadWeeklySummary(filters = {}) {
+  const summary = await fetchWeeklySummary(filters);
+  if (!summary.length) {
+    showSummaryView();
+    summaryChartCanvas.style.display = 'none';
+    expensesList.innerHTML = '<p>No data for weekly summary.</p>';
+    return;
+  }
+  const labels = summary.map(s => s.week);
+  const data = summary.map(s => s.total);
+  showSummaryView();
+  expensesList.innerHTML = '';
+  summaryChartCanvas.style.display = 'block';
+  updateSummaryChart(labels, data, 'Weekly Expenses');
+}
+
+function showDetailsView() {
+  chartContainer.style.display = 'none';
+  expensesSection.style.display = 'block';
+  viewDetailsBtn.disabled = true;
+  viewMonthlyBtn.disabled = false;
+  viewWeeklyBtn.disabled = false;
+}
+
+function showSummaryView() {
+  chartContainer.style.display = 'block';
+  expensesSection.style.display = 'block';
+  viewDetailsBtn.disabled = false;
+  viewMonthlyBtn.disabled = true;
+  viewWeeklyBtn.disabled = true;
+}
+
+expenseForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+
+  const id = expenseIdInput.value;
+  const amount = parseFloat(document.getElementById('amount').value);
+  const category = document.getElementById('category').value.trim();
+  const date = document.getElementById('date').value;
+  const description = document.getElementById('description').value.trim();
+
+  if (!amount || !date || !description) {
+    alert('Please fill in all required fields');
+    return;
+  }
+
+  const expenseData = { amount, category, date, description };
+
+  try {
+    if (id) {
+      const res = await fetch(`${API_BASE}/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(expenseData)
+      });
+      if (!res.ok) throw new Error('Update failed');
+      alert('Expense updated');
+    } else {
+      const res = await fetch(API_BASE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(expenseData)
+      });
+      if (!res.ok) throw new Error('Add failed');
+      alert('Expense added');
+    }
+    
+    expenseForm.reset();
+    expenseIdInput.value = '';
+    submitBtn.textContent = 'Add Expense';
+
+    // Reload current view's data
+    if (viewDetailsBtn.disabled) {
+      loadExpenses(getFilters());
+    } else if (viewMonthlyBtn.disabled) {
+      loadMonthlySummary(getFilters());
+    } else if (viewWeeklyBtn.disabled) {
+      loadWeeklySummary(getFilters());
+    }
+
+  } catch (e) {
+    alert(e.message);
+  }
+});
+
+resetBtn.addEventListener('click', (e) => {
+  expenseForm.reset();
+  expenseIdInput.value = '';
+  submitBtn.textContent = 'Add Expense';
+});
+
+async function editExpense(id) {
+  const expenses = await fetchExpenses();
+  const expense = expenses.find(e => e.id === id);
+  if (!expense) return alert('Expense not found for editing');
+  expenseIdInput.value = id;
+  document.getElementById('amount').value = expense.amount;
+  document.getElementById('category').value = expense.category;
+  document.getElementById('date').value = formatDate(expense.date);
+  document.getElementById('description').value = expense.description;
+  submitBtn.textContent = 'Update Expense';
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+async function deleteExpense(id) {
+  if (!confirm('Are you sure you want to delete this expense?')) return;
+  const res = await fetch(`${API_BASE}/${id}`, { method: 'DELETE', credentials: 'include' });
+  if (!res.ok) return alert('Failed to delete expense');
+  alert('Expense deleted');
+  
+  // Reload current view's data
+  if (viewDetailsBtn.disabled) {
+    loadExpenses(getFilters());
+  } else if (viewMonthlyBtn.disabled) {
+    loadMonthlySummary(getFilters());
+  } else if (viewWeeklyBtn.disabled) {
+    loadWeeklySummary(getFilters());
+  }
+}
+
+function getFilters() {
+  return {
+    category: filterCategory.value || '',
+    fromDate: filterFromDate.value || '',
+    toDate: filterToDate.value || ''
+  };
+}
+
+filterBtn.addEventListener('click', () => {
+  if (viewDetailsBtn.disabled) {
+    loadExpenses(getFilters());
+  } else if (viewMonthlyBtn.disabled) {
+    loadMonthlySummary(getFilters());
+  } else if (viewWeeklyBtn.disabled) {
+    loadWeeklySummary(getFilters());
+  }
+});
+
+clearFilterBtn.addEventListener('click', () => {
+  filterCategory.value = '';
+  filterFromDate.value = '';
+  filterToDate.value = '';
+  if (viewDetailsBtn.disabled) {
+    loadExpenses();
+  } else if (viewMonthlyBtn.disabled) {
+    loadMonthlySummary();
+  } else if (viewWeeklyBtn.disabled) {
+    loadWeeklySummary();
+  }
+});
+
+backupBtn.addEventListener('click', async () => {
+  backupBtn.disabled = true;
+  backupBtn.textContent = 'Backing up...';
+  try {
+    const res = await fetch('/api/backup', {credentials: 'include'});
+    if (!res.ok) throw new Error('Backup failed');
+    const json = await res.json();
+    alert('Backup saved as: ' + json.backupFile);
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    backupBtn.disabled = false;
+    backupBtn.textContent = 'Backup Database';
+  }
+});
+
+// View buttons event listeners
+viewDetailsBtn.addEventListener('click', () => {
+  loadExpenses(getFilters());
+});
+
+viewMonthlyBtn.addEventListener('click', () => {
+  loadMonthlySummary(getFilters());
+});
+
+viewWeeklyBtn.addEventListener('click', () => {
+  loadWeeklySummary(getFilters());
+});
+
+// On load check login and initialize
+window.addEventListener('load', async () => {
+  const user = await checkLogin();
+  if (!user) return; // redirected from checkLogin if not logged in
+  renderUserInfo(user.username);
+  loadExpenses();
+});
+</script>
+</body>
+</html>
+

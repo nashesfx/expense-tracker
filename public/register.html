@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Register - Expense Tracker</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #f4f6f8;
+    color: #333;
+    max-width: 400px;
+    margin: 3rem auto;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  }
+  h1 {
+    text-align: center;
+    color: #2a9d8f;
+    margin-bottom: 2rem;
+  }
+  label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+  }
+  input[type="text"],
+  input[type="password"] {
+    width: 100%;
+    padding: 0.6rem;
+    margin-bottom: 1.25rem;
+    font-size: 1rem;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    box-sizing: border-box;
+  }
+  button {
+    background: #2a9d8f;
+    color: white;
+    border: none;
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1.1rem;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  button:hover {
+    background: #21867a;
+  }
+  .message {
+    margin-top: 1rem;
+    text-align: center;
+    font-weight: 600;
+  }
+  .link {
+    margin-top: 1rem;
+    text-align: center;
+  }
+  .link a {
+    color: #2a9d8f;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .link a:hover {
+    text-decoration: underline;
+  }
+</style>
+</head>
+<body>
+<h1>Register</h1>
+<form id="register-form" novalidate>
+  <label for="username">Username</label>
+  <input type="text" id="username" required placeholder="Choose a username" minlength="3" />
+
+  <label for="password">Password</label>
+  <input type="password" id="password" required placeholder="At least 6 characters" minlength="6" />
+
+  <button type="submit">Register</button>
+  <div class="message" id="message"></div>
+</form>
+<div class="link">
+  <p>Already have an account? <a href="login.html">Login here</a></p>
+</div>
+
+<script>
+  const form = document.getElementById('register-form');
+  const messageEl = document.getElementById('message');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    messageEl.textContent = '';
+
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (username.length < 3) {
+      messageEl.textContent = 'Username must be at least 3 characters.';
+      messageEl.style.color = 'red';
+      return;
+    }
+    if (password.length < 6) {
+      messageEl.textContent = 'Password must be at least 6 characters.';
+      messageEl.style.color = 'red';
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ username, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        messageEl.textContent = data.error || 'Registration failed.';
+        messageEl.style.color = 'red';
+        return;
+      }
+
+      messageEl.textContent = 'Registration successful! Redirecting...';
+      messageEl.style.color = 'green';
+      setTimeout(() => {
+        window.location.href = 'index.html';
+      }, 1500);
+
+    } catch (err) {
+      messageEl.textContent = 'Network error, please try later.';
+      messageEl.style.color = 'red';
+    }
+  });
+</script>
+</body>
+</html>
