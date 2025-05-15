@@ -14,11 +14,8 @@ const upload = multer({ storage: multer.memoryStorage() });
 const app = express();
 const PORT = 3000;
 
-// Encryption key length must be consistent, store in ENV or here securely in prod
-const ENCRYPTION_KEY = crypto.randomBytes(32); // 256-bit key
-// IV is per-encryption basis, generate randomly when encrypting
+const ENCRYPTION_KEY = crypto.randomBytes(32);
 
-// Middleware
 app.use(bodyParser.json());
 app.use(cors({
     origin: 'http://localhost:3000',
@@ -26,19 +23,17 @@ app.use(cors({
 }));
 app.use(express.static('public'));
 
-// Session middleware
 app.use(session({
     secret: 'your_super_secret_key_change_in_prod',
     resave: false,
     saveUninitialized: false,
     cookie: {
-        maxAge: 3600000, // 1 hour
+        maxAge: 3600000,
         httpOnly: true,
         sameSite: 'lax'
     }
 }));
 
-// Initialize SQLite database
 const DBSOURCE = 'expenses.db';
 
 const db = new sqlite3.Database(DBSOURCE, (err) => {
@@ -65,7 +60,6 @@ const db = new sqlite3.Database(DBSOURCE, (err) => {
     }
 });
 
-// Helper: encryption and decryption (AES-256-CBC with random IV prepended)
 function encrypt(text) {
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY), iv);
@@ -88,7 +82,6 @@ function decrypt(text) {
     }
 }
 
-// Authenticate middleware
 function requireLogin(req, res, next) {
     if (!req.session.userId) {
         return res.status(401).json({ error: 'Unauthorized, please login.' });
@@ -96,14 +89,12 @@ function requireLogin(req, res, next) {
     next();
 }
 
-// Register endpoint
 app.post('/api/register', (req, res) => {
     const { username, password } = req.body;
     if (!username || !password || password.length < 6) {
         return res.status(400).json({ error: 'Username and password (min 6!) required.' });
     }
     
-    // Hash password
     bcrypt.hash(password, 10, (err, hash) => {
         if (err) return res.status(500).json({ error: 'Internal error' });
         
@@ -122,7 +113,6 @@ app.post('/api/register', (req, res) => {
     });
 });
 
-// Login endpoint
 app.post('/api/login', (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -144,7 +134,6 @@ app.post('/api/login', (req, res) => {
     });
 });
 
-// Logout endpoint
 app.post('/api/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) return res.status(500).json({ error: 'Failed to logout' });
@@ -152,15 +141,12 @@ app.post('/api/logout', (req, res) => {
     });
 });
 
-// Current user endpoint
 app.get('/api/current_user', (req, res) => {
     if (!req.session.userId) {
         return res.status(401).json({ error: 'Not logged in' });
     }
     res.json({ id: req.session.userId, username: req.session.username });
 });
-
-// Expense Routes (all require login)
 
 app.post('/api/expenses', requireLogin, (req, res) => {
     const { amount, category, date, description } = req.body;
@@ -249,7 +235,6 @@ app.delete('/api/expenses/:id', requireLogin, (req, res) => {
     });
 });
 
-// Backup (restricted, only logged in)
 app.get('/api/backup', requireLogin, (req, res) => {
     const backupDir = path.join(__dirname, 'backup');
     if (!fs.existsSync(backupDir)) {
@@ -267,7 +252,6 @@ app.get('/api/backup', requireLogin, (req, res) => {
     });
 });
 
-// Monthly summary: sum of amounts grouped by year-month
 app.get('/api/expenses/summary/monthly', requireLogin, (req, res) => {
   const userId = req.session.userId;
   const { fromDate, toDate, category } = req.query;
@@ -298,7 +282,6 @@ app.get('/api/expenses/summary/monthly', requireLogin, (req, res) => {
   });
 });
 
-// Weekly summary: sum of amounts grouped by year-week (ISO week number)
 app.get('/api/expenses/summary/weekly', requireLogin, (req, res) => {
   const userId = req.session.userId;
   const { fromDate, toDate, category } = req.query;
@@ -328,7 +311,6 @@ app.get('/api/expenses/summary/weekly', requireLogin, (req, res) => {
   db.all(sql, params, (err, rows) => {
     if (err) return res.status(500).json({ error: err.message });
 
-    // Format week label as "YYYY-WW" and send total
     const formatted = rows.map(r => ({
       week: `${r.year}-W${('0' + r.week).slice(-2)}`,
       total: r.total
@@ -338,7 +320,6 @@ app.get('/api/expenses/summary/weekly', requireLogin, (req, res) => {
   });
 });
 
-// Update user profile (username)
 app.put('/api/user/profile', requireLogin, (req, res) => {
   const userId = req.session.userId;
   const { username } = req.body;
@@ -349,7 +330,6 @@ app.put('/api/user/profile', requireLogin, (req, res) => {
 
   const trimmedUsername = username.trim();
 
-  // Check if username already exists for another user
   db.get('SELECT id FROM users WHERE username = ? AND id != ?', [trimmedUsername, userId], (err, row) => {
     if (err) return res.status(500).json({ error: 'Database error' });
     if (row) return res.status(409).json({ error: 'Username already taken.' });
@@ -362,7 +342,6 @@ app.put('/api/user/profile', requireLogin, (req, res) => {
   });
 });
 
-// Change password
 app.put('/api/user/password', requireLogin, (req, res) => {
   const userId = req.session.userId;
   const { currentPassword, newPassword } = req.body;
@@ -391,7 +370,6 @@ app.put('/api/user/password', requireLogin, (req, res) => {
   });
 });
 
-// Export user expenses as Excel
 app.get('/api/expenses/export', requireLogin, async (req, res) => {
   const userId = req.session.userId;
   db.all('SELECT * FROM expenses WHERE user_id = ?', [userId], async (err, rows) => {
@@ -427,7 +405,6 @@ app.get('/api/expenses/export', requireLogin, async (req, res) => {
   });
 });
 
-// Import user expenses from Excel
 app.post('/api/expenses/import', requireLogin, upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
 
@@ -448,7 +425,6 @@ app.post('/api/expenses/import', requireLogin, upload.single('file'), async (req
 
       if (isNaN(amount) || !date || !description) continue;
 
-      // encrypt description before storing
       const encryptedDesc = encrypt(description);
       insertStmt.run(userId, amount, category, date, encryptedDesc);
     }
@@ -460,7 +436,6 @@ app.post('/api/expenses/import', requireLogin, upload.single('file'), async (req
   }
 });
 
-// Start server
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
